@@ -28,7 +28,7 @@ describe("gulp-include", function () {
       });
       testInclude.write(file);
     });
-    
+
     it("should keep whitespace when including", function (done) {
       var file = new gutil.File({
         base: "test/fixtures/",
@@ -46,7 +46,7 @@ describe("gulp-include", function () {
       });
       testInclude.write(file);
     });
-    
+
     it("should include complex folder trees", function (done) {
       var file = new gutil.File({
         base: "test/fixtures/",
@@ -65,7 +65,7 @@ describe("gulp-include", function () {
       testInclude.write(file);
     });
   })
-  
+
   it("should not REQUIRE a file twice", function (done) {
     var file = new gutil.File({
       base: "test/fixtures/",
@@ -83,7 +83,7 @@ describe("gulp-include", function () {
     });
     testInclude.write(file);
   });
-  
+
   it("should pull files recursively", function (done) {
     var file = new gutil.File({
       base: "test/fixtures/",
@@ -101,7 +101,7 @@ describe("gulp-include", function () {
     });
     testInclude.write(file);
   });
-  
+
   it("should only include files with the set extensions, if provided", function (done) {
     var file = new gutil.File({
       base: "test/fixtures/",
@@ -121,7 +121,7 @@ describe("gulp-include", function () {
     });
     testInclude.write(file);
   });
-  
+
   it("should work with html-comments", function(done) {
     var file = new gutil.File({
       base: "test/fixtures/",
@@ -151,5 +151,23 @@ describe("gulp-include", function () {
         d.sourceMap.sources.should.eql(['basic-include.js', 'deep_path/b.js', 'deep_path/deeper_path/c.js'])
       }))
       .pipe(assert.end(done));
+  });
+
+  it('should support @codekit formats', function (done) {
+    var file = new gutil.File({
+      base: "test/fixtures/",
+      path: "test/fixtures/js/codekit-formats.js",
+      contents: fs.readFileSync("test/fixtures/js/codekit-formats.js")
+    });
+
+    testInclude = include();
+    testInclude.on("data", function (newFile) {
+      should.exist(newFile);
+      should.exist(newFile.contents);
+
+      String(newFile.contents).should.equal(String(fs.readFileSync("test/expected/js/codekit-formats.js"), "utf8"))
+      done();
+    });
+    testInclude.write(file);
   });
 })

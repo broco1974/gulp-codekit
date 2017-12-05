@@ -1,5 +1,5 @@
 #gulp-codekit [![NPM version][npm-image]][npm-url] ![Travis build][travis-image]
->Makes inclusion of files a breeze.  
+>Makes inclusion of files a breeze.
 Supports CodeKit and Prepros include directives.
 Heavily based on [gulp-include](http://github.com/wiledal/gulp-include) by [Hugo Wiledal](http://github.com/wiledal)
 
@@ -11,7 +11,7 @@ Heavily based on [gulp-include](http://github.com/wiledal/gulp-include) by [Hugo
 
 ## Installation
 ```shell
-npm install gulp-include
+npm install gulp-codekit
 ```
 ## Usage
 Example `gulpfile.js`:
@@ -39,7 +39,7 @@ gulp.task("default", ["scripts"]);
 
 ## Include directives
 `gulp-include` uses directives similar to `sprockets` or `snockets`. A _directive_ is a comment in your files that `gulp-include` recognizes as a command.
-  
+
 Example directives:
 ```javascript
 //=require vendor/jquery.js
@@ -62,9 +62,9 @@ Example directives:
 ```
 
 The contents of the referenced file will replace the file.
-  
+
 ### `require` vs. `include`
-A file that is included with `require` will only be included if it has not been included  before. Files included with `include` will _always_ be included.  
+A file that is included with `require` will only be included if it has not been included  before. Files included with `include` will _always_ be included.
 For instance, let's say you want to include `jquery.js` only once, and before any of your other scripts in the same folder.
 ```javascript
 //=require vendor/jquery.js

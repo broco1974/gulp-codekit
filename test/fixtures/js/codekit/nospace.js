@@ -1,0 +1,1 @@
+// ok: codekit/nospace.js

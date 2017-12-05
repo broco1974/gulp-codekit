@@ -55,10 +55,17 @@ module.exports = function (params) {
 };
 
 function processInclude(content, filePath, sourceMap) {
-  var matches = content.match(/^(\s+)?(\/\/|\/\*|\#|\<\!\-\-)(\s+)?(\=|\s\@codekit\-)(\s+)?(include|require|append|prepend)(.+$)/mg);
-  var relativeBasePath = path.dirname(filePath);
+  var r1 = /^[ \t]*(?:\/\/|\/\*|#|<!--)[ \t]*(?:=[ \t]*|@codekit-)(?:(include|require|append|prepend)[ \t])[ \t]*['"]?[ \t]*(.+?)[ \t]*['"]?[ \t]*;?[ \t]*(?:\*\/|#|-->)?[ \t]*$/mg;
+  var r2 = /^[ \t]*(?:\/\/|\/\*|#|<!--)[ \t]*(?:=[ \t]*|@codekit-)(?:(include|require|append|prepend)[ \t])[ \t]*['"]?[ \t]*(.+?)[ \t]*['"]?[ \t]*;?[ \t]*(?:\*\/|#|-->)?[ \t]*$/;
 
-  if (!matches) return {content: content, map: null};
+  var codekitRules = content.match(r1);
+  if (!codekitRules) return {content: content, map: null};
+
+  var matchGroups = codekitRules.map(function (codekitRule) {
+    return codekitRule.match(r2)
+  }, codekitRules);
+
+  var relativeBasePath = path.dirname(filePath);
 
   var map = null, mapSelf, lastMappedLine, currentPos, insertedLines;
   if (sourceMap) {
@@ -88,30 +95,21 @@ function processInclude(content, filePath, sourceMap) {
     };
   }
 
-  for (var i = 0; i < matches.length; i++) {
-    var leadingWhitespaceMatch = matches[i].match(/^\s*/);
+  for (var i = 0; i < matchGroups.length; i++) {
+    var match = matchGroups[i];
+    var includeType = match[1];
+    var includePath = relativeBasePath + "/" + match[2];
+
+    var leadingWhitespaceMatch = match[0].match(/^\s*/);
     var leadingWhitespace = null;
     if (leadingWhitespaceMatch) {
       leadingWhitespace = leadingWhitespaceMatch[0].replace("\n", "");
     }
 
-    // Remove beginnings, endings and trim.
-    var includeCommand = matches[i]
-      .replace(/(\s+)/gi, " ")
-      .replace(/(\/\/|\/\*|\#)(\s+)?=(\s+)?/g, "")
-      .replace(/(\*\/)$/gi, "")
-      .replace(/['"]/g, "")
-      .trim();
-    var split = includeCommand.split(" ");
-    
-    // Split the directive and the path
-    var includeType = split[0];
-    var includePath = relativeBasePath + "/" + split[1];
-
     var currentLine;
     if (sourceMap) {
       // get position of current match and get current line number
-      currentPos = content.indexOf(matches[i], currentPos);
+      currentPos = content.indexOf(match[0], currentPos);
       currentLine = currentPos === -1 ? 0 : content.substr(0, currentPos).match(/^/mg).length;
 
       // sometimes the line matches the leading \n and sometimes it doesn't. wierd.
@@ -120,22 +118,22 @@ function processInclude(content, filePath, sourceMap) {
 
       mapSelf(currentLine);
     }
-    
+
     // Use glob for file searching
     var fileMatches = glob.sync(includePath, {mark: true});
     var replaceContent = '';
     for (var y = 0; y < fileMatches.length; y++) {
       var globbedFilePath = fileMatches[y];
-      
+
       // If directive is of type "require" and file already included, skip to next.
       if (includeType == "require" && includedFiles.indexOf(globbedFilePath) > -1) continue;
-      
+
       // If not in extensions, skip this file
-      if (!inExtensions(globbedFilePath)) continue; 
-      
+      if (!inExtensions(globbedFilePath)) continue;
+
       // Get file contents and apply recursive include on result
       var fileContents = fs.readFileSync(globbedFilePath);
-      
+
       var result = processInclude(fileContents.toString(), globbedFilePath, sourceMap);
       var resultContent = result.content;
 
@@ -197,7 +195,7 @@ function processInclude(content, filePath, sourceMap) {
         currentLine += lines;
         lastMappedLine = currentLine;
       }
-      
+
       if (includedFiles.indexOf(globbedFilePath) == -1) includedFiles.push(globbedFilePath);
 
       // If the last file did not have a line break, and it is not the last file in the matched glob,
@@ -219,7 +217,7 @@ function processInclude(content, filePath, sourceMap) {
         replaceContent = '\n' + replaceContent;
       }
 
-      content = content.replace(matches[i], function() { return replaceContent });
+      content = content.replace(match[0], function() { return replaceContent });
       insertedLines--; // adjust because the original line with comment was removed
     }
   }
@@ -229,7 +227,7 @@ function processInclude(content, filePath, sourceMap) {
 
     mapSelf(currentLine);
   }
-  
+
   return {content: content, map: map ? map.toString() : null};
 }
 
