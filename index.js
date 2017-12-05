@@ -56,7 +56,7 @@ module.exports = function (params) {
 
 function processInclude(content, filePath, sourceMap) {
   var r1 = /^[ \t]*(?:\/\/|\/\*|#|<!--)[ \t]*(?:=[ \t]*|@codekit-)(?:(include|require|append|prepend)[ \t])[ \t]*['"]?[ \t]*(.+?)[ \t]*['"]?[ \t]*;?[ \t]*(?:\*\/|#|-->)?[ \t]*$/mg;
-  var r2 = /^[ \t]*(?:\/\/|\/\*|#|<!--)[ \t]*(?:=[ \t]*|@codekit-)(?:(include|require|append|prepend)[ \t])[ \t]*['"]?[ \t]*(.+?)[ \t]*['"]?[ \t]*;?[ \t]*(?:\*\/|#|-->)?[ \t]*$/;
+  var r2 = new RegExp(r1, '');
 
   var codekitRules = content.match(r1);
   if (!codekitRules) return {content: content, map: null};
